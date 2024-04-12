@@ -10,6 +10,7 @@ from langchain.chains.combine_documents.stuff import StuffDocumentsChain
 from langchain_text_splitters import TokenTextSplitter
 from bs4 import BeautifulSoup
 from langchain.schema.document import Document
+import os
 
 
 app = Flask(__name__)

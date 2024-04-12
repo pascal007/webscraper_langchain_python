@@ -23,23 +23,22 @@
     }
 
     .left-panel {
-      display: flex;
-      flex-direction: column;
-      transform: translate(5px, 0px);
+      width: 300px;
+      z-index: 101;
     }
 
     .right-panel {
-      width: 50vw;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+      width: 900px;
+      flex: 1;
+      padding-left: 30px;
+      padding-top: 10px;
+      transform: translateX(-2px);
     }
 
     .shadow {
       background-color: white;
       box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
     }
-
     #documentIFrame {
       width: 100%;
 
@@ -66,13 +65,12 @@
 
     th,
     td {
-      padding: 15px;
+      padding: 8px;
     }
 
     tr {
       border: 1px solid gray;
     }
-
     tr:not(:first-child) {
       background-color: white;
       cursor: pointer;
@@ -118,14 +116,6 @@
       text-decoration: underline;
     }
 
-    .display-summary {
-      width: 30%;
-    }
-
-    #summary-container {
-      padding-left: 30px;
-    }
-
     /* Add responsiveness */
     @media screen and (max-width: 768px) {
       #page {
@@ -133,22 +123,13 @@
       }
 
       .container {
-        width: 450px;
+        width:450px;
       }
-
       #documentIFrame {
         height: 50vh;
         /* Half of the viewport height */
         width: 100vw;
         /* Full width of the viewport */
-      }
-
-      .right-containier {
-        width: 50vh;
-      }
-
-      .display-summary {
-        width: 30%;
       }
     }
   </style>
@@ -218,69 +199,71 @@
   </div>
   <div class="container">
     <div class="left-panel">
-      <div id="pagination"></div>
       <div id="filingsTable"></div>
       <p id="loadingText" class="hidden">Loading...</p>
+      <div id="pagination"></div>
     </div>
     <div class="right-panel" style="padding-left: 0px;">
-      <button id="" type="button" class="display-summary" style="display: none">
-        Show summary
-      </button>
-      <div id="summary-container" style="display:none"></div>
       <iframe id="documentIFrame" src="" style="display: none"></iframe>
-
     </div>
   </div>
 
   <script>
-    // Open an iframe showing the content of documents
     function openDocumentIFrame(url) {
       const iframe = document.querySelector("#documentIFrame");
-      const button = document.querySelector(".display-summary");
-      console.log(button)
-      const summaryDiv = document.querySelector("#summary-container");
       iframe.src = `/get_filing_html?url=${encodeURI(url)}`;
       iframe.style.display = "block";
-      summaryDiv.style.display = "none";
-      button.style.display = "block";
     }
-
     function selectRow(rowElement) {
-        const rows = document.querySelectorAll("#filingsTable tr");
-        rows.forEach(row => {
-            row.classList.remove('selected');  // Remove 'selected' from all rows
-        });
-        rowElement.classList.add('selected');  // Add 'selected' to the clicked row
+      const rows = document.querySelectorAll("#filingsTable tr");
+      rows.forEach(row => {
+        row.classList.remove('selected');  // Remove 'selected' from all rows
+      });
+      rowElement.classList.add('selected');  // Add 'selected' to the clicked row
     }
-
-    // Update a page when pagination occurs
+    document.getElementById("tickerForm").addEventListener("submit", function (event) {
+      event.preventDefault();
+      const ticker = document.getElementById("ticker").value;
+      const loadingText = document.getElementById("loadingText");
+      const filingType = document.getElementById("filingType").value;
+      loadingText.classList.remove('hidden');
+      fetch(`/recent_filings?company=${ticker}&filing_type=${filingType}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.error) {
+            alert(data.error);
+            return;
+          }
+          const filings = data.filings;
+          const filingsPerPage = 15;
+          const numPages = Math.ceil(filings.length / filingsPerPage);
+          const currentPage = 1;
+          updatePage(currentPage, numPages, filings, filingsPerPage);
+        })
+        .catch(error => console.error('Error:', error))
+        .finally(_ => {
+          loadingText.classList.add('hidden');
+        });
+    });
     function updatePage(pageNum, numPages, filings, filingsPerPage) {
       const startIndex = (pageNum - 1) * filingsPerPage;
       const endIndex = Math.min(startIndex + filingsPerPage, filings.length);
       const filingsToShow = filings.slice(startIndex, endIndex);
 
-      console.log(filingsToShow);
+      console.log(filingsToShow)
 
       const tableContent = `
                 <table>
                     <tr>
-                        <th>Company</th>
-                        <th>CIK</th>
                         <th>Filing Type</th>
                         <th>Filing Date</th>
                     </tr>
-                    ${filingsToShow
-          .map(
-            (filing) => `
+                    ${filingsToShow.map(filing => `
                         <tr class="shadow1" onclick="selectRow(this); openDocumentIFrame('${filing.url}')">
-                            <td>${filing.company_name}</td>
-                            <td>${filing.cik}</td>
                             <td>${filing.form_type}</td>
                             <td>${filing.filing_date}</td>
                         </tr>
-                    `
-          )
-          .join("")}
+                    `).join('')}
                 </table>`;
 
       const prevPageButton = document.createElement("button");
@@ -289,14 +272,15 @@
       nextPageButton.innerText = "next";
 
       const pageNumText = document.createElement("p");
-      pageNumText.innerText = `page ${pageNum} / ${numPages}`;
+      pageNumText.classList.add('pagination-text')
+      pageNumText.innerText = `page ${pageNum} / ${numPages}`
 
       prevPageButton.onclick = () => {
         updatePage(pageNum - 1, numPages, filings, filingsPerPage);
-      };
+      }
       nextPageButton.onclick = () => {
         updatePage(pageNum + 1, numPages, filings, filingsPerPage);
-      };
+      }
 
       document.getElementById("filingsTable").innerHTML = tableContent;
       const paginationContainer = document.getElementById("pagination");
@@ -309,67 +293,6 @@
       }
       paginationContainer.appendChild(pageNumText);
     }
-
-    // When the form is submitted
-    document
-      .getElementById("tickerForm")
-      .addEventListener("submit", function (event) {
-        event.preventDefault();
-        const ticker = document.getElementById("ticker").value;
-        const loadingText = document.getElementById("loadingText");
-        const filingType = document.getElementById("filingType").value;
-        loadingText.classList.remove("hidden");
-        fetch(`/recent_filings?company=${ticker}&filing_type=${filingType}`)
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.error) {
-              alert(data.error);
-              return;
-            }
-            const filings = data.filings;
-            const filingsPerPage = 20;
-            const numPages = Math.ceil(filings.length / filingsPerPage);
-            const currentPage = 1;
-            updatePage(currentPage, numPages, filings, filingsPerPage);
-          })
-          .catch((error) => console.error("Error:", error))
-          .finally((_) => {
-            loadingText.classList.add("hidden");
-          });
-      });
-
-    // When click the "Show summary" button
-    document
-      .querySelector(".display-summary")
-      .addEventListener("click", function (event) {
-        event.preventDefault();
-        const iframe = document.querySelector("#documentIFrame");
-        const button = document.querySelector(".display-summary");
-
-        // Extract the document url from the iframe.src
-        const url = new URL(iframe.src);
-        const extractedUrl = url.searchParams.get('url');
-
-        // Fetch the summary for the selected page
-        fetch(`/get_summary?url=${encodeURI(extractedUrl)}`)
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.error) {
-              alert(data.error);
-              return;
-            }
-            console.log(data);
-            const summaryDiv = document.querySelector("#summary-container");
-            summaryDiv.style.display = "block";
-            summaryDiv.innerHTML = data;
-          })
-          .catch((error) => console.error("Error:", error))
-          .finally((_) => {
-            loadingText.classList.add("hidden");
-          });
-
-
-      });
   </script>
 </body>
 

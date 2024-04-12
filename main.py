@@ -1,3 +1,5 @@
+import json
+
 from openai import OpenAI
 from dotenv import load_dotenv
 from flask import Flask, render_template, jsonify, request
@@ -28,6 +30,11 @@ recent_filings_data = {
     "GOOGL": ["10-K", "10-Q"],
     "AMZN": ["10-K", "10-Q", "S-1"],
 }
+
+# load sec company data
+json_file_path = os.path.join('data', 'sec_company_ticker.json')
+with open(json_file_path, 'r') as file:
+    sec_company_ticker = json.load(file)
 
 
 # Mock function to get HTML link for a filing
@@ -289,6 +296,27 @@ def get_what_does_it_mean():
     except Exception as e:
         print(e)
         return jsonify({"error": "error downloading"}), 404
+
+
+@app.route("/get_auto_complete")
+def get_auto_complete():
+    try:
+        query = request.args.get('query', '')
+        suggestions = []
+        if query:
+            for value in sec_company_ticker.values():
+                if query.lower() in value['title'].lower():
+                    suggestions.append(value)
+                    if len(suggestions) == int(os.environ.get('MAX_SUGGESTION_LIMIT')):
+                        break
+        return jsonify(suggestions), 200
+    except Exception as e:
+        print(e)
+        return jsonify({"error": "error getting suggestions"}), 400
+
+
+if __name__ == "__main__":
+    app.run(debug=True, port=5000, host="0.0.0.0")
 
 
 if __name__ == "__main__":

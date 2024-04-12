@@ -199,21 +199,37 @@
   </div>
   <div class="container">
     <div class="left-panel">
+      <div id="pagination"></div>
       <div id="filingsTable"></div>
       <p id="loadingText" class="hidden">Loading...</p>
-      <div id="pagination"></div>
     </div>
-    <div class="right-panel" style="padding-left: 0px;">
+    <div class="right-panel" style="padding-left: 0px">
+      <button
+        id=""
+        type="button"
+        class="display-summary"
+        style="display: none"
+      >
+        Show summary
+      </button>
+      <div id="summary-container" style="display: none"></div>
       <iframe id="documentIFrame" src="" style="display: none"></iframe>
     </div>
   </div>
 
+
   <script>
     function openDocumentIFrame(url) {
       const iframe = document.querySelector("#documentIFrame");
+      const button = document.querySelector(".display-summary");
+      console.log(button);
+      const summaryDiv = document.querySelector("#summary-container");
       iframe.src = `/get_filing_html?url=${encodeURI(url)}`;
       iframe.style.display = "block";
+      summaryDiv.style.display = "none";
+      button.style.display = "block";
     }
+
     function selectRow(rowElement) {
       const rows = document.querySelectorAll("#filingsTable tr");
       rows.forEach(row => {
@@ -245,6 +261,39 @@
           loadingText.classList.add('hidden');
         });
     });
+    
+    // When click the "Show summary" button
+    document
+      .querySelector(".display-summary")
+      .addEventListener("click", function (event) {
+        event.preventDefault();
+        const iframe = document.querySelector("#documentIFrame");
+        const button = document.querySelector(".display-summary");
+
+        // Extract the document url from the iframe.src
+        const url = new URL(iframe.src);
+        const extractedUrl = url.searchParams.get('url');
+
+        // Fetch the summary for the selected page
+        fetch(`/get_summary?url=${encodeURI(extractedUrl)}`)
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.error) {
+              alert(data.error);
+              return;
+            }
+            console.log(data);
+            const summaryDiv = document.querySelector("#summary-container");
+            summaryDiv.style.display = "block";
+            summaryDiv.innerHTML = data;
+          })
+          .catch((error) => console.error("Error:", error))
+          .finally((_) => {
+            loadingText.classList.add("hidden");
+          });
+
+
+      });
     function updatePage(pageNum, numPages, filings, filingsPerPage) {
       const startIndex = (pageNum - 1) * filingsPerPage;
       const endIndex = Math.min(startIndex + filingsPerPage, filings.length);

@@ -1,348 +1,450 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SEC Filings</title>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="{{ url_for('serve_static', path='css/style.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SEC Filings</title>
-  <link rel="stylesheet" type="text/css" href="{{ url_for('serve_static', path='css/style.css') }}">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-
-  <style>
-    #page {
-      display: flex;
-      flex-direction: row;
-    }
-
-    .container {
-      margin: auto;
-      flex: 1;
-      padding: 20px;
-      display: flex;
-      width: 1200px;
-    }
-
-    .left-panel {
-      width: 300px;
-      z-index: 101;
-    }
-
-    .right-panel {
-      width: 900px;
-      flex: 1;
-      padding-left: 30px;
-      padding-top: 10px;
-      transform: translateX(-2px);
-    }
-
-    .shadow {
-      background-color: white;
-      box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-    }
-    #documentIFrame {
-      width: 100%;
-
-      flex: 1;
-      /* Takes up the remaining space */
-      height: 100%
-    }
-
-    /* Table styling */
-    table {
-      width: 100%;
-      /* Full width of its parent */
-      border-collapse: collapse;
-      /* Collapses border */
-      margin-top: 20px;
-      /* Adds spacing above the table */
-      height: calc(100vh - 450px);
-      overflow: auto;
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    th,
-    td {
-      padding: 8px;
-    }
-
-    tr {
-      border: 1px solid gray;
-    }
-    tr:not(:first-child) {
-      background-color: white;
-      cursor: pointer;
-    }
-
-    tr:not(:first-child):hover {
-      background-color: gray;
-      color: white;
-    }
-
-    tr.selected {
-      border-right: white;
-    }
-
-    th {
-      background-color: #f2f2f2;
-      /* Adds a background color to the header */
-    }
-
-    /* Button styling */
-    button {
-      background-color: gray;
-      color: white;
-      padding: 10px 15px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: ease all 0.3s;
-    }
-
-    button:hover {
-      background-color: #ccc;
-    }
-
-    #pagination {
-      display: flex;
-      align-items: center;
-      column-gap: 15px;
-    }
-
-    .pagination-text {
-      color: blue;
-      text-decoration: underline;
-    }
-
-    /* Add responsiveness */
-    @media screen and (max-width: 768px) {
+    <style>
       #page {
-        flex-direction: column;
+        display: flex;
+        flex-direction: row;
       }
 
       .container {
-        width:450px;
+        margin: auto;
+        flex: 1;
+        padding: 20px;
+        display: flex;
+        width: 1200px;
+      }
+
+      .left-panel {
+        width: 300px;
+        z-index: 101;
+      }
+
+      .right-panel {
+        width: 900px;
+        flex: 1;
+        padding-left: 30px;
+        padding-top: 10px;
+        transform: translateX(-2px);
+      }
+
+      .shadow {
+        background-color: white;
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2),
+          0 6px 20px 0 rgba(0, 0, 0, 0.19);
       }
       #documentIFrame {
-        height: 50vh;
-        /* Half of the viewport height */
-        width: 100vw;
-        /* Full width of the viewport */
+        width: 100%;
+
+        flex: 1;
+        /* Takes up the remaining space */
+        height: 100%;
       }
-    }
-  </style>
-</head>
 
-<body>
-  <div class="container header-container">
-    <div class="left-panel">
-      <form id="tickerForm">
-        <div style="display: flex; position: relative; align-items: center;">
-          <input type="text" id="ticker" name="ticker"
-            style="flex: 1; padding: 2px 5px; border: solid 1px gray; border-radius: 4px;"
-            placeholder="&OpenCurlyDoubleQuote;Search&CloseCurlyDoubleQuote;" required>
-          <i class="fa fa-search"
-            style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); color: gray;"></i>
-        </div>
-        <h3>&OpenCurlyDoubleQuote;Company&CloseCurlyDoubleQuote;</h3>
-        <div style="display: flex; align-items: center;">
-          <label for="filingType">Choose Filing Type: </label>
-          <select id="filingType" name="filingType" style="flex: 1;  padding: 2px 5px;">
-            <option value="All">All</option>
+      /* Table styling */
+      table {
+        width: 100%;
+        /* Full width of its parent */
+        border-collapse: collapse;
+        /* Collapses border */
+        margin-top: 20px;
+        /* Adds spacing above the table */
+        height: calc(100vh - 450px);
+        overflow: auto;
+      }
 
-            <option value="NO ACT">NO ACT</option>
-            <option value="SC 13G/A">SC 13G/A</option>
-            <option value="S-8">S-8</option>
-            <option value="8-K">8-K</option>
-            <option value="CERT">CERT</option>
-            <option value="CERTNYS">CERTNYS</option>
-            <option value="FWP">FWP</option>
-            <option value="25-NSE">25-NSE</option>
-            <option value="424B2">424B2</option>
-            <option value="CORRESP">CORRESP</option>
-            <option value="DEFA14A">DEFA14A</option>
-            <option value="S-8 POS">S-8 POS</option>
-            <option value="DEF 14A">DEF 14A</option>
-            <option value="IRANNOTICE">IRANNOTICE</option>
-            <option value="144">144</option>
-            <option value="PX14A6G">PX14A6G</option>
-            <option value="10-K">10-K</option>
-            <option value="PRE 14A">PRE 14A</option>
-            <option value="8-K/A">8-K/A</option>
-            <option value="PX14A6N">PX14A6N</option>
-            <option value="10-Q">10-Q</option>
-            <option value="UPLOAD">UPLOAD</option>
-            <option value="8-A12B">8-A12B</option>
-            <option value="DFAN14A">DFAN14A</option>
-            <option value="SD">SD</option>
-            <option value="SC 13G">SC 13G</option>
-            <option value="25">25</option>
-            <option value="S-3ASR">S-3ASR</option>
-          </select>
+      .hidden {
+        display: none;
+      }
+
+      th,
+      td {
+        padding: 8px;
+      }
+
+      tr {
+        border: 1px solid gray;
+      }
+      tr:not(:first-child) {
+        background-color: white;
+        cursor: pointer;
+      }
+
+      tr:not(:first-child):hover {
+        background-color: gray;
+        color: white;
+      }
+
+      tr.selected {
+        border-right: white;
+      }
+
+      th {
+        background-color: #f2f2f2;
+        /* Adds a background color to the header */
+      }
+
+      /* Button styling */
+      button {
+        background-color: gray;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: ease all 0.3s;
+      }
+
+      button:hover {
+        background-color: #ccc;
+      }
+
+      #pagination {
+        display: flex;
+        align-items: center;
+        column-gap: 15px;
+      }
+
+      .pagination-text {
+        color: blue;
+        text-decoration: underline;
+      }
+
+      /* Add responsiveness */
+      @media screen and (max-width: 768px) {
+        #page {
+          flex-direction: column;
+        }
+
+        .container {
+          width: 450px;
+        }
+        #documentIFrame {
+          height: 50vh;
+          /* Half of the viewport height */
+          width: 100vw;
+          /* Full width of the viewport */
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container header-container">
+      <div class="left-panel">
+        <form id="tickerForm">
+          <div style="display: flex; position: relative; align-items: center">
+            <input
+              type="text"
+              id="ticker"
+              name="ticker"
+              style="
+                flex: 1;
+                padding: 2px 5px;
+                border: solid 1px gray;
+                border-radius: 4px;
+              "
+              placeholder="&OpenCurlyDoubleQuote;Search&CloseCurlyDoubleQuote;"
+              required
+            />
+            <i
+              class="fa fa-search"
+              style="
+                position: absolute;
+                right: 5px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: gray;
+              "
+            ></i>
+          </div>
+          <h3>&OpenCurlyDoubleQuote;Company&CloseCurlyDoubleQuote;</h3>
+          <div style="display: flex; align-items: center">
+            <label for="filingType">Choose Filing Type: </label>
+            <select
+              id="filingType"
+              name="filingType"
+              style="flex: 1; padding: 2px 5px"
+            >
+              <option value="All">All</option>
+
+              <option value="NO ACT">NO ACT</option>
+              <option value="SC 13G/A">SC 13G/A</option>
+              <option value="S-8">S-8</option>
+              <option value="8-K">8-K</option>
+              <option value="CERT">CERT</option>
+              <option value="CERTNYS">CERTNYS</option>
+              <option value="FWP">FWP</option>
+              <option value="25-NSE">25-NSE</option>
+              <option value="424B2">424B2</option>
+              <option value="CORRESP">CORRESP</option>
+              <option value="DEFA14A">DEFA14A</option>
+              <option value="S-8 POS">S-8 POS</option>
+              <option value="DEF 14A">DEF 14A</option>
+              <option value="IRANNOTICE">IRANNOTICE</option>
+              <option value="144">144</option>
+              <option value="PX14A6G">PX14A6G</option>
+              <option value="10-K">10-K</option>
+              <option value="PRE 14A">PRE 14A</option>
+              <option value="8-K/A">8-K/A</option>
+              <option value="PX14A6N">PX14A6N</option>
+              <option value="10-Q">10-Q</option>
+              <option value="UPLOAD">UPLOAD</option>
+              <option value="8-A12B">8-A12B</option>
+              <option value="DFAN14A">DFAN14A</option>
+              <option value="SD">SD</option>
+              <option value="SC 13G">SC 13G</option>
+              <option value="25">25</option>
+              <option value="S-3ASR">S-3ASR</option>
+            </select>
+          </div>
+          <div style="margin-top: 10px">
+            <button type="submit" style="border-radius: 20px">
+              Get Recent Filings
+            </button>
+          </div>
+        </form>
+      </div>
+      <div class="right-panel" style="position: relative">
+        <div
+          style="
+            display: flex;
+            column-gap: 20px;
+            margin-bottom: 10px;
+            position: absolute;
+            bottom: 0;
+          "
+        >
+          <button
+            style="border-radius: 10px; padding: 10px 40px"
+            class="key-points"
+          >
+            Key Points
+          </button>
+          <button
+            style="border-radius: 10px; padding: 10px 40px"
+            class="red-flags"
+          >
+            Red Flags
+          </button>
+          <button
+            style="border-radius: 10px; padding: 10px 40px"
+            class="who-is-involved"
+          >
+            Who is involved
+          </button>
+          <button
+            style="border-radius: 10px; padding: 10px 40px"
+            class="who-is-impacted"
+          >
+            Who is impacted
+          </button>
+          <button
+            style="border-radius: 10px; padding: 10px 40px"
+            class="what-does-it-mean"
+          >
+            What does it mean for investors
+          </button>
         </div>
-        <div style="margin-top: 10px;">
-          <button type="submit" style="border-radius: 20px;">Get Recent Filings</button>
-        </div>
-      </form>
-    </div>
-    <div class="right-panel" style="position: relative;">
-      <div style="display: flex; column-gap: 20px; margin-bottom: 10px; position: absolute; bottom: 0;">
-        <button style="border-radius: 10px; padding: 10px 40px;">Key Points</button>
-        <button style="border-radius: 10px; padding: 10px 40px;">Red Flags</button>
-        <button style="border-radius: 10px; padding: 10px 40px;">Who is involved</button>
-        <button style="border-radius: 10px; padding: 10px 40px;">Who is impacted</button>
-        <button style="border-radius: 10px; padding: 10px 40px;">What does it mean for investors</button>
       </div>
     </div>
-  </div>
-  <div class="container">
-    <div class="left-panel">
-      <div id="pagination"></div>
-      <div id="filingsTable"></div>
-      <p id="loadingText" class="hidden">Loading...</p>
+    <div class="container">
+      <div class="left-panel">
+        <div id="pagination"></div>
+        <div id="filingsTable"></div>
+        <p id="loadingText" class="hidden">Loading...</p>
+      </div>
+      <div class="right-panel" style="padding-left: 0px">
+        <button
+          id=""
+          type="button"
+          class="display-summary"
+          style="display: none"
+        >
+          Show summary
+        </button>
+        <div id="summary-container" style="display: none"></div>
+          <div id="key-points-container" style="display: none"></div>
+          <div id="red-flags-container" style="display: none"></div>
+          <div id="who-is-involved-container" style="display: none"></div>
+          <div id="who-is-impacted-container" style="display: none"></div>
+          <div id="what-does-it-mean-container" style="display: none"></div>
+        <iframe id="documentIFrame" src="" style="display: none"></iframe>
+      </div>
     </div>
-    <div class="right-panel" style="padding-left: 0px">
-      <button
-        id=""
-        type="button"
-        class="display-summary"
-        style="display: none"
-      >
-        Show summary
-      </button>
-      <div id="summary-container" style="display: none"></div>
-      <iframe id="documentIFrame" src="" style="display: none"></iframe>
-    </div>
-  </div>
 
-
-  <script>
-    function openDocumentIFrame(url) {
-      const iframe = document.querySelector("#documentIFrame");
-      const button = document.querySelector(".display-summary");
-      console.log(button);
-      const summaryDiv = document.querySelector("#summary-container");
-      iframe.src = `/get_filing_html?url=${encodeURI(url)}`;
-      iframe.style.display = "block";
-      summaryDiv.style.display = "none";
-      button.style.display = "block";
-    }
-
-    function selectRow(rowElement) {
-      const rows = document.querySelectorAll("#filingsTable tr");
-      rows.forEach(row => {
-        row.classList.remove('selected');  // Remove 'selected' from all rows
-      });
-      rowElement.classList.add('selected');  // Add 'selected' to the clicked row
-    }
-    document.getElementById("tickerForm").addEventListener("submit", function (event) {
-      event.preventDefault();
-      const ticker = document.getElementById("ticker").value;
-      const loadingText = document.getElementById("loadingText");
-      const filingType = document.getElementById("filingType").value;
-      loadingText.classList.remove('hidden');
-      fetch(`/recent_filings?company=${ticker}&filing_type=${filingType}`)
-        .then(response => response.json())
-        .then(data => {
-          if (data.error) {
-            alert(data.error);
-            return;
-          }
-          const filings = data.filings;
-          const filingsPerPage = 15;
-          const numPages = Math.ceil(filings.length / filingsPerPage);
-          const currentPage = 1;
-          updatePage(currentPage, numPages, filings, filingsPerPage);
-        })
-        .catch(error => console.error('Error:', error))
-        .finally(_ => {
-          loadingText.classList.add('hidden');
-        });
-    });
-    
-    // When click the "Show summary" button
-    document
-      .querySelector(".display-summary")
-      .addEventListener("click", function (event) {
-        event.preventDefault();
+    <script>
+      function openDocumentIFrame(url) {
         const iframe = document.querySelector("#documentIFrame");
         const button = document.querySelector(".display-summary");
+        console.log(button);
+        const summaryDiv = document.querySelector("#summary-container");
+        iframe.src = `/get_filing_html?url=${encodeURI(url)}`;
+        iframe.style.display = "block";
+        summaryDiv.style.display = "none";
+        button.style.display = "block";
+      }
 
-        // Extract the document url from the iframe.src
-        const url = new URL(iframe.src);
-        const extractedUrl = url.searchParams.get('url');
-
-        // Fetch the summary for the selected page
-        fetch(`/get_summary?url=${encodeURI(extractedUrl)}`)
-          .then((response) => response.json())
-          .then((data) => {
+      function selectRow(rowElement) {
+        const rows = document.querySelectorAll("#filingsTable tr");
+        rows.forEach(row => {
+          row.classList.remove('selected');  // Remove 'selected' from all rows
+        });
+        rowElement.classList.add('selected');  // Add 'selected' to the clicked row
+      }
+      document.getElementById("tickerForm").addEventListener("submit", function (event) {
+        event.preventDefault();
+        const ticker = document.getElementById("ticker").value;
+        const loadingText = document.getElementById("loadingText");
+        const filingType = document.getElementById("filingType").value;
+        loadingText.classList.remove('hidden');
+        fetch(`/recent_filings?company=${ticker}&filing_type=${filingType}`)
+          .then(response => response.json())
+          .then(data => {
             if (data.error) {
               alert(data.error);
               return;
             }
-            console.log(data);
-            const summaryDiv = document.querySelector("#summary-container");
-            summaryDiv.style.display = "block";
-            summaryDiv.innerHTML = data;
+            const filings = data.filings;
+            const filingsPerPage = 15;
+            const numPages = Math.ceil(filings.length / filingsPerPage);
+            const currentPage = 1;
+            updatePage(currentPage, numPages, filings, filingsPerPage);
           })
-          .catch((error) => console.error("Error:", error))
-          .finally((_) => {
-            loadingText.classList.add("hidden");
+          .catch(error => console.error('Error:', error))
+          .finally(_ => {
+            loadingText.classList.add('hidden');
           });
-
-
       });
-    function updatePage(pageNum, numPages, filings, filingsPerPage) {
-      const startIndex = (pageNum - 1) * filingsPerPage;
-      const endIndex = Math.min(startIndex + filingsPerPage, filings.length);
-      const filingsToShow = filings.slice(startIndex, endIndex);
 
-      console.log(filingsToShow)
+      function getResponseForPage(path, container) {
+          // Extract the document url from the iframe.src
+          const iframe = document.querySelector("#documentIFrame");
+          const url = new URL(iframe.src);
+          const extractedUrl = url.searchParams.get('url');
 
-      const tableContent = `
-                <table>
-                    <tr>
-                        <th>Filing Type</th>
-                        <th>Filing Date</th>
-                    </tr>
-                    ${filingsToShow.map(filing => `
-                        <tr class="shadow1" onclick="selectRow(this); openDocumentIFrame('${filing.url}')">
-                            <td>${filing.form_type}</td>
-                            <td>${filing.filing_date}</td>
-                        </tr>
-                    `).join('')}
-                </table>`;
+          // Fetch the summary for the selected page
+          fetch(`/${path}?url=${encodeURI(extractedUrl)}`)
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.error) {
+                alert(data.error);
+                return;
+              }
+              console.log(data);
+              const summaryDiv = document.querySelector(container);
+              summaryDiv.style.display = "block";
+              summaryDiv.innerHTML = data;
+            })
+            .catch((error) => console.error("Error:", error))
+            .finally((_) => {
+              loadingText.classList.add("hidden");
+            });
+          }
+          document
+          .querySelector(".display-summary")
+          .addEventListener("click", function (event) {
+            event.preventDefault();
+            getResponseForPage('get_summary', "#summary-container")
+          });
+        
+        document
+          .querySelector(".key-points")
+          .addEventListener("click", function (event) {
+            event.preventDefault();
+            getResponseForPage('get_key_points', '#key-points-container')
+          });
+        
+        document
+          .querySelector(".red-flags")
+          .addEventListener("click", function (event) {
+            event.preventDefault();
+            getResponseForPage('get_red_flags', '#red-flags-container')
+          });
+          
+        document
+          .querySelector(".who-is-involved")
+          .addEventListener("click", function (event) {
+            event.preventDefault();
+            getResponseForPage('get_who_is_involved', '#who-is-involved-container')
+          });
+          
+        document
+          .querySelector(".who-is-impacted")
+          .addEventListener("click", function (event) {
+            event.preventDefault();
+            getResponseForPage('get_who_is_impacted', '#who-is-impacted-container')
+          });
+        
+        document
+          .querySelector(".what-does-it-mean")
+          .addEventListener("click", function (event) {
+            event.preventDefault();
+            getResponseForPage('get_what_does_it_mean', '#what-does-it-mean-container')
+          });
+        
 
-      const prevPageButton = document.createElement("button");
-      prevPageButton.innerText = "prev";
-      const nextPageButton = document.createElement("button");
-      nextPageButton.innerText = "next";
+      function updatePage(pageNum, numPages, filings, filingsPerPage) {
+        const startIndex = (pageNum - 1) * filingsPerPage;
+        const endIndex = Math.min(startIndex + filingsPerPage, filings.length);
+        const filingsToShow = filings.slice(startIndex, endIndex);
 
-      const pageNumText = document.createElement("p");
-      pageNumText.classList.add('pagination-text')
-      pageNumText.innerText = `page ${pageNum} / ${numPages}`
+        console.log(filingsToShow)
 
-      prevPageButton.onclick = () => {
-        updatePage(pageNum - 1, numPages, filings, filingsPerPage);
+        const tableContent = `
+                  <table>
+                      <tr>
+                          <th>Filing Type</th>
+                          <th>Filing Date</th>
+                      </tr>
+                      ${filingsToShow.map(filing => `
+                          <tr class="shadow1" onclick="selectRow(this); openDocumentIFrame('${filing.url}')">
+                              <td>${filing.form_type}</td>
+                              <td>${filing.filing_date}</td>
+                          </tr>
+                      `).join('')}
+                  </table>`;
+
+        const prevPageButton = document.createElement("button");
+        prevPageButton.innerText = "prev";
+        const nextPageButton = document.createElement("button");
+        nextPageButton.innerText = "next";
+
+        const pageNumText = document.createElement("p");
+        pageNumText.classList.add('pagination-text')
+        pageNumText.innerText = `page ${pageNum} / ${numPages}`
+
+        prevPageButton.onclick = () => {
+          updatePage(pageNum - 1, numPages, filings, filingsPerPage);
+        }
+        nextPageButton.onclick = () => {
+          updatePage(pageNum + 1, numPages, filings, filingsPerPage);
+        }
+
+        document.getElementById("filingsTable").innerHTML = tableContent;
+        const paginationContainer = document.getElementById("pagination");
+        paginationContainer.innerHTML = "";
+        if (pageNum > 1) {
+          paginationContainer.appendChild(prevPageButton);
+        }
+        if (pageNum !== numPages) {
+          paginationContainer.appendChild(nextPageButton);
+        }
+        paginationContainer.appendChild(pageNumText);
       }
-      nextPageButton.onclick = () => {
-        updatePage(pageNum + 1, numPages, filings, filingsPerPage);
-      }
-
-      document.getElementById("filingsTable").innerHTML = tableContent;
-      const paginationContainer = document.getElementById("pagination");
-      paginationContainer.innerHTML = "";
-      if (pageNum > 1) {
-        paginationContainer.appendChild(prevPageButton);
-      }
-      if (pageNum !== numPages) {
-        paginationContainer.appendChild(nextPageButton);
-      }
-      paginationContainer.appendChild(pageNumText);
-    }
-  </script>
-</body>
-
+    </script>
+  </body>
 </html>

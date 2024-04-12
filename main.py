@@ -10,7 +10,6 @@ from langchain.chains.combine_documents.stuff import StuffDocumentsChain
 from langchain_text_splitters import TokenTextSplitter
 from bs4 import BeautifulSoup
 from langchain.schema.document import Document
-import os
 
 
 app = Flask(__name__)
@@ -54,7 +53,9 @@ def get_response_from_GPT(message):
     return completion.choices[0].message.content
 
 
-def get_summary_from_url(url):
+
+
+def get_response_from_url(url, prompt):
     html = download_sec_html(url)
     soup = BeautifulSoup(html, "html.parser")
     text = soup.get_text()
@@ -82,7 +83,7 @@ def get_summary_from_url(url):
     Take these and distill it into a final, consolidated summary of the main themes.
     Helpful Answer:
     """
-    reduce_prompt = PromptTemplate.from_template(reduce_template)
+    reduce_prompt = PromptTemplate.from_template(prompt)
 
     # Run chain
     reduce_chain = LLMChain(llm=llm, prompt=reduce_prompt)
@@ -114,6 +115,35 @@ def get_summary_from_url(url):
     result = map_reduce_chain.invoke(docs)
     summary = result["output_text"]
     return summary
+
+def get_summary_from_url(url):
+    prompt = """The following is a set of summaries:
+    {docs}
+    Take these and distill it into a final, consolidated summary of the main themes.
+    Helpful Answer:
+    """
+    response = get_response_from_url(url, prompt)
+    return response
+
+def get_key_points_from_url(url):
+    response = get_response_from_url(url, "List out key points of {docs}.")
+    return response
+
+def get_red_flags_from_url(url):
+    response = get_response_from_url(url, "Find red flags in this: {docs}")
+    return response
+
+def get_who_is_involved_from_url(url):
+    response = get_response_from_url(url, "Who is involved: {docs}")
+    return response
+
+def get_who_is_impacted_from_url(url):
+    response = get_response_from_url(url, "Who is impacted: {docs}")
+    return response
+
+def get_what_does_it_mean_for_investors_from_url(url):
+    response = get_response_from_url(url, "What does it mean for investors: {docs}")
+    return response
 
 
 @app.route("/")
@@ -180,5 +210,85 @@ def get_summary():
         return jsonify({"error": "error downloading"}), 404
 
 
+@app.route("/get_key_points")
+def get_key_points():
+    url = request.args.get("url")
+
+    # Make sure that the URL actually goes to sec.gov
+    if not url.startswith("https://www.sec.gov/"):
+        return jsonify({"error": "Invalid SEC URL"}), 400
+
+    try:
+        summary = get_key_points_from_url(url)
+
+        return jsonify(summary), 200
+    except Exception as e:
+        print(e)
+        return jsonify({"error": "error downloading"}), 404
+
+
+@app.route("/get_red_flags")
+def get_red_flags():
+    url = request.args.get("url")
+
+    # Make sure that the URL actually goes to sec.gov
+    if not url.startswith("https://www.sec.gov/"):
+        return jsonify({"error": "Invalid SEC URL"}), 400
+
+    try:
+        summary = get_red_flags_from_url(url)
+
+        return jsonify(summary), 200
+    except Exception as e:
+        print(e)
+        return jsonify({"error": "error downloading"}), 404
+
+
+@app.route("/get_who_is_involved")
+def get_who_is_involved():
+    url = request.args.get("url")
+
+    # Make sure that the URL actually goes to sec.gov
+    if not url.startswith("https://www.sec.gov/"):
+        return jsonify({"error": "Invalid SEC URL"}), 400
+
+    try:
+        summary = get_who_is_involved_from_url(url)
+
+        return jsonify(summary), 200
+    except Exception as e:
+        print(e)
+        return jsonify({"error": "error downloading"}), 404
+
+
+@app.route("/get_who_is_impacted")
+def get_who_is_impacted():
+    url = request.args.get("url")
+
+    # Make sure that the URL actually goes to sec.gov
+    if not url.startswith("https://www.sec.gov/"):
+        return jsonify({"error": "Invalid SEC URL"}), 400
+
+    try:
+        summary = get_who_is_impacted_from_url(url)
+
+        return jsonify(summary), 200
+    except Exception as e:
+        print(e)
+        return jsonify({"error": "error downloading"}), 404
+
+
+@app.route("/get_what_does_it_mean")
+def get_what_does_it_mean():
+    url = request.args.get("url")
+    try:
+        summary = get_what_does_it_mean_for_investors_from_url(url)
+
+        return jsonify(summary), 200
+    except Exception as e:
+        print(e)
+        return jsonify({"error": "error downloading"}), 404
+
+
 if __name__ == "__main__":
-    app.run(debug=True, port=5000, host="0.0.0.0")
+    app.run(debug=True, port=5001, host="0.0.0.0")

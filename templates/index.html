@@ -139,6 +139,47 @@
           /* Full width of the viewport */
         }
       }
+
+      /* MODAL STYLES
+-------------------------------*/
+.jw-modal {
+    /* modals are hidden by default */
+    display: none;
+
+    /* modal container fixed across whole screen */
+    position: fixed;
+    inset: 0;
+
+    /* z-index must be higher than everything else on the page */
+    z-index: 10000;
+    
+    /* semi-transparent black background exposed by padding */
+    background-color: rgba(0, 0, 0, .75);
+    padding: 40px;
+
+    /* enables scrolling for tall modals */
+    overflow: auto;
+}
+
+.jw-modal.open {
+    display: block;
+}
+
+.jw-modal-body {
+    padding: 20px;
+    background: #fff;
+    max-width: 65%;
+    margin: 0 auto;
+}
+
+body.jw-modal-open {
+    /* body overflow is hidden to hide main scrollbar when modal window is open */
+    overflow: hidden;
+}
+Back to top
+ 
+
+
     </style>
   </head>
 
@@ -277,16 +318,38 @@
           Show summary
         </button>
         <div id="summary-container" style="display: none"></div>
-          <div id="key-points-container" style="display: none"></div>
-          <div id="red-flags-container" style="display: none"></div>
-          <div id="who-is-involved-container" style="display: none"></div>
-          <div id="who-is-impacted-container" style="display: none"></div>
-          <div id="what-does-it-mean-container" style="display: none"></div>
         <iframe id="documentIFrame" src="" style="display: none"></iframe>
       </div>
     </div>
+    <div>
+        <div id="modal" class="jw-modal">
+            <div class="jw-modal-body">
+              <div id='modal-body'></div>
+              <button onclick="closeModal()">Close</button>
+            </div>
+        </div>
+    </div>
 
     <script>
+      function openModal() {
+        document.getElementById('modal').classList.add('open');
+        document.body.classList.add('jw-modal-open');
+      }
+  
+      function closeModal() {
+        document.querySelector('.jw-modal.open').classList.remove('open');
+        document.body.classList.remove('jw-modal-open');
+        document.getElementById('modal-body').innerHTML = '';
+      }
+  
+      window.addEventListener('load', function() {
+        document.addEventListener('click', event => {
+            if (event.target.classList.contains('jw-modal')) {
+                closeModal();
+            }
+        });
+      });
+
       function openDocumentIFrame(url) {
         const iframe = document.querySelector("#documentIFrame");
         const button = document.querySelector(".display-summary");
@@ -330,7 +393,7 @@
           });
       });
 
-      function getResponseForPage(path, container, prefix) {
+      function getResponseForPage(path, prefix) {
           // Extract the document url from the iframe.src
           const iframe = document.querySelector("#documentIFrame");
           const url = new URL(iframe.src);
@@ -344,10 +407,11 @@
                 alert(data.error);
                 return;
               }
+
               console.log(data);
-              const summaryDiv = document.querySelector(container);
-              summaryDiv.style.display = "block";
-              summaryDiv.innerHTML = prefix + ' ' + data;
+              const summaryDiv = document.getElementById('modal-body');
+              summaryDiv.innerHTML = prefix + '\n' + data;
+              openModal()
             })
             .catch((error) => console.error("Error:", error))
             .finally((_) => {
@@ -358,42 +422,42 @@
           .querySelector(".display-summary")
           .addEventListener("click", function (event) {
             event.preventDefault();
-            getResponseForPage('get_summary', "#summary-container", "Summary:")
+            getResponseForPage('get_summary', "Summary:")
           });
         
         document
           .querySelector(".key-points")
           .addEventListener("click", function (event) {
             event.preventDefault();
-            getResponseForPage('get_key_points', '#key-points-container', "Key Points:")
+            getResponseForPage('get_key_points', "Key Points:")
           });
         
         document
           .querySelector(".red-flags")
           .addEventListener("click", function (event) {
             event.preventDefault();
-            getResponseForPage('get_red_flags', '#red-flags-container', "Red Flags:")
+            getResponseForPage('get_red_flags', "Red Flags:")
           });
           
         document
           .querySelector(".who-is-involved")
           .addEventListener("click", function (event) {
             event.preventDefault();
-            getResponseForPage('get_who_is_involved', '#who-is-involved-container', "Who is involved:")
+            getResponseForPage('get_who_is_involved', "Who is involved:")
           });
           
         document
           .querySelector(".who-is-impacted")
           .addEventListener("click", function (event) {
             event.preventDefault();
-            getResponseForPage('get_who_is_impacted', '#who-is-impacted-container', "Who is impacted:")
+            getResponseForPage('get_who_is_impacted', "Who is impacted:")
           });
         
         document
           .querySelector(".what-does-it-mean")
           .addEventListener("click", function (event) {
             event.preventDefault();
-            getResponseForPage('get_what_does_it_mean', '#what-does-it-mean-container', "What does it mean for investors:")
+            getResponseForPage('get_what_does_it_mean', "What does it mean for investors:")
           });
         
 
@@ -417,6 +481,10 @@
                           </tr>
                       `).join('')}
                   </table>`;
+
+        if (filingsToShow.length >0) {
+          openDocumentIFrame(filingsToShow[0].url);
+        }
 
         const prevPageButton = document.createElement("button");
         prevPageButton.innerText = "prev";
@@ -445,6 +513,7 @@
         }
         paginationContainer.appendChild(pageNumText);
       }
+
     </script>
   </body>
 </html>

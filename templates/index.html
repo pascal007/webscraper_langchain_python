@@ -1,503 +1,491 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SEC Filings</title>
-    <link
-      rel="stylesheet"
-      type="text/css"
-      href="{{ url_for('serve_static', path='css/style.css') }}"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
-    />
 
-    <style>
-            #page {
-              display: flex;
-              flex-direction: row;
-            }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SEC Filings</title>
+  <link rel="stylesheet" type="text/css" href="{{ url_for('serve_static', path='css/style.css') }}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
 
-            .container {
-              margin: auto;
-              flex: 1;
-              padding: 20px;
-              display: flex;
-              width: 1300px;
-            }
+  <style>
+    #page {
+      display: flex;
+      flex-direction: row;
+    }
 
-            .left-panel {
-              width: 300px;
-              z-index: 101;
-            }
+    .container {
+      margin: auto;
+      flex: 1;
+      padding: 20px;
+      display: flex;
+      width: 1300px;
+    }
 
-            .right-panel {
-              width: 900px;
-              flex: 1;
-              padding-left: 30px;
-              padding-top: 10px;
-              transform: translateX(-2px);
-            }
+    .left-panel {
+      width: 300px;
+      z-index: 101;
+    }
 
-            .shadow {
-              background-color: white;
-              box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2),
-                0 6px 20px 0 rgba(0, 0, 0, 0.19);
-            }
-            #documentIFrame {
-              width: 100%;
+    .right-panel {
+      width: 900px;
+      flex: 1;
+      padding-left: 30px;
+      padding-top: 10px;
+      transform: translateX(-2px);
+    }
 
-              flex: 1;
-              /* Takes up the remaining space */
-              height: 100%;
-            }
+    .shadow {
+      background-color: white;
+      box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2),
+        0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    }
 
-            /* Table styling */
-            table {
-              width: 100%;
-              /* Full width of its parent */
-              border-collapse: collapse;
-              /* Collapses border */
-              margin-top: 20px;
-              /* Adds spacing above the table */
-              height: calc(100vh - 450px);
-              overflow: auto;
-            }
+    #documentIFrame {
+      width: 100%;
 
-            .hidden {
-              display: none;
-            }
+      flex: 1;
+      /* Takes up the remaining space */
+      height: 100vh;
+    }
 
-            .info-buttons {
-              border-radius: 10px;
-              padding: 10px 20px;
-            }
+    /* Table styling */
+    table {
+      width: 100%;
+      /* Full width of its parent */
+      border-collapse: collapse;
+      /* Collapses border */
+      margin-top: 20px;
+      /* Adds spacing above the table */
+      height: calc(100vh - 450px);
+      overflow: auto;
+    }
 
-            th,
-            td {
-              padding: 8px;
-            }
+    .hidden {
+      display: none;
+    }
 
-            tr {
-              border: 1px solid gray;
-            }
-            tr:not(:first-child) {
-              background-color: white;
-              cursor: pointer;
-            }
+    .info-buttons {
+      /* border-radius: 10px; */
+      padding: 10px 20px;
+    }
 
-            tr:not(:first-child):hover {
-              background-color: gray;
-              color: white;
-            }
+    th,
+    td {
+      padding: 8px;
+    }
 
-            tr.selected {
-              border-right: white;
-            }
+    tr {
+      border: 1px solid gray;
+    }
 
-            th {
-              background-color: #f2f2f2;
-              /* Adds a background color to the header */
-            }
+    tr:not(:first-child) {
+      background-color: white;
+      cursor: pointer;
+    }
 
-            /* Button styling */
-            button {
-              background-color: gray;
-              color: white;
-              padding: 10px 15px;
-              border: none;
-              border-radius: 5px;
-              cursor: pointer;
-              transition: ease all 0.3s;
-            }
+    tr:not(:first-child):hover {
+      background-color: gray;
+      color: white;
+    }
 
-            button:hover {
-              background-color: #ccc;
-            }
+    tr.selected {
+      border-right: white;
+    }
 
-            #pagination {
-              display: flex;
-              align-items: center;
-              column-gap: 15px;
-            }
+    th {
+      background-color: #f2f2f2;
+      /* Adds a background color to the header */
+    }
 
-            .pagination-text {
-              color: blue;
-              text-decoration: underline;
-            }
+    /* Button styling */
+    button {
+      background-color: gray;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      /* border-radius: 5px; */
+      cursor: pointer;
+      transition: ease all 0.3s;
+    }
 
-            /* Add responsiveness */
-            @media screen and (max-width: 768px) {
-              #page {
-                flex-direction: column;
-              }
+    button:hover {
+      background-color: #ccc;
+    }
 
-              .container {
-                width: 450px;
-              }
-              #documentIFrame {
-                height: 50vh;
-                /* Half of the viewport height */
-                width: 100vw;
-                /* Full width of the viewport */
-              }
-            }
+    #pagination {
+      display: flex;
+      align-items: center;
+      column-gap: 15px;
+    }
 
-            /* MODAL STYLES
+    .pagination-text {
+      color: blue;
+      text-decoration: underline;
+    }
+
+    /* Add responsiveness */
+    @media screen and (max-width: 768px) {
+      #page {
+        flex-direction: column;
+      }
+
+      .container {
+        width: 450px;
+      }
+
+      #documentIFrame {
+        height: 50vh;
+        /* Half of the viewport height */
+        width: 100vw;
+        /* Full width of the viewport */
+      }
+    }
+
+    /* MODAL STYLES
       -------------------------------*/
-      .jw-modal {
-          /* modals are hidden by default */
-          display: none;
+    .jw-modal {
+      /* modals are hidden by default */
+      display: none;
 
-          /* modal container fixed across whole screen */
-          position: fixed;
-          inset: 0;
+      /* modal container fixed across whole screen */
+      position: fixed;
+      inset: 0;
 
-          /* z-index must be higher than everything else on the page */
-          z-index: 10000;
+      /* z-index must be higher than everything else on the page */
+      z-index: 10000;
 
-          /* semi-transparent black background exposed by padding */
-          background-color: rgba(0, 0, 0, .75);
-          padding: 40px;
+      /* semi-transparent black background exposed by padding */
+      background-color: rgba(0, 0, 0, .75);
+      padding: 40px;
 
-          /* enables scrolling for tall modals */
-          overflow: auto;
-      }
+      /* enables scrolling for tall modals */
+      overflow: auto;
+    }
 
-      .jw-modal.open {
-          display: block;
-      }
+    .jw-modal.open {
+      align-items: center;
+      justify-content: center;
+      display: flex;
+    }
 
-      .jw-modal-body {
-          padding: 20px;
-          background: #fff;
-          max-width: 65%;
-          margin: 0 auto;
-      }
+    .jw-modal-body {
+      padding: 20px;
+      background: #fff;
+      max-width: 65%;
+      margin: 0 auto;
+    }
 
-      body.jw-modal-open {
-          /* body overflow is hidden to hide main scrollbar when modal window is open */
-          overflow: hidden;
-      }
-      Back to top
-    </style>
-  </head>
+    body.jw-modal-open {
+      /* body overflow is hidden to hide main scrollbar when modal window is open */
+      overflow: hidden;
+    }
 
-  <body>
-    <div class="container header-container">
-      <div class="left-panel">
-        <form id="tickerForm">
-          <div style="display: flex; position: relative; align-items: center">
-            <input
-              type="text"
-              id="ticker"
-              name="ticker"
-              style="
+    Back to top
+  </style>
+</head>
+
+<body>
+  <div class="container header-container">
+    <div class="left-panel">
+      <form id="tickerForm">
+        <div style="display: flex; position: relative; align-items: center">
+          <input type="text" id="ticker" name="ticker" style="
                 flex: 1;
                 padding: 2px 5px;
                 border: solid 1px gray;
                 border-radius: 4px;
-              "
-              placeholder="&OpenCurlyDoubleQuote;Search&CloseCurlyDoubleQuote;"
-              required
-            />
-            <i
-              class="fa fa-search"
-              style="
+              " placeholder="&OpenCurlyDoubleQuote;Search&CloseCurlyDoubleQuote;" required />
+          <i class="fa fa-search" style="
                 position: absolute;
                 right: 5px;
                 top: 50%;
                 transform: translateY(-50%);
                 color: gray;
-              "
-            ></i>
-          </div>
-          <h3>&OpenCurlyDoubleQuote;Company&CloseCurlyDoubleQuote;</h3>
-          <div style="display: flex; align-items: center">
-            <label for="filingType">Choose Filing Type: </label>
-            <select
-              id="filingType"
-              name="filingType"
-              style="flex: 1; padding: 2px 5px"
-            >
-              <option value="All">All</option>
+              "></i>
+        </div>
+        <h3>&OpenCurlyDoubleQuote;Company&CloseCurlyDoubleQuote;</h3>
+        <div style="display: flex; align-items: center">
+          <label for="filingType">Choose Filing Type: </label>
+          <select id="filingType" name="filingType" style="flex: 1; padding: 2px 5px">
+            <option value="All">All</option>
 
-              <option value="NO ACT">NO ACT</option>
-              <option value="SC 13G/A">SC 13G/A</option>
-              <option value="S-8">S-8</option>
-              <option value="8-K">8-K</option>
-              <option value="CERT">CERT</option>
-              <option value="CERTNYS">CERTNYS</option>
-              <option value="FWP">FWP</option>
-              <option value="25-NSE">25-NSE</option>
-              <option value="424B2">424B2</option>
-              <option value="CORRESP">CORRESP</option>
-              <option value="DEFA14A">DEFA14A</option>
-              <option value="S-8 POS">S-8 POS</option>
-              <option value="DEF 14A">DEF 14A</option>
-              <option value="IRANNOTICE">IRANNOTICE</option>
-              <option value="144">144</option>
-              <option value="PX14A6G">PX14A6G</option>
-              <option value="10-K">10-K</option>
-              <option value="PRE 14A">PRE 14A</option>
-              <option value="8-K/A">8-K/A</option>
-              <option value="PX14A6N">PX14A6N</option>
-              <option value="10-Q">10-Q</option>
-              <option value="UPLOAD">UPLOAD</option>
-              <option value="8-A12B">8-A12B</option>
-              <option value="DFAN14A">DFAN14A</option>
-              <option value="SD">SD</option>
-              <option value="SC 13G">SC 13G</option>
-              <option value="25">25</option>
-              <option value="S-3ASR">S-3ASR</option>
-            </select>
-          </div>
-          <div style="margin-top: 10px">
-            <button type="submit" style="border-radius: 20px">
-              Get Recent Filings
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-    <div class="container">
-      <div class="left-panel">
-        <div id="filingsTable"></div>
-        <div id="pagination"></div>
-        <p id="loadingText" class="hidden">Loading...</p>
-      </div>
-      <div class="right-panel" style="padding-left: 0px">
-        <div id="buttons" style="display: none">
-          <button type="button" class="display-summary info-buttons">
-            Show summary
-          </button>
-          <button class="key-points info-buttons">Key Points</button>
-          <button class="red-flags info-buttons">Red Flags</button>
-          <button class="who-is-involved info-buttons">Who is involved</button>
-          <button class="who-is-impacted info-buttons">Who is impacted</button>
-          <button class="what-does-it-mean info-buttons">
-            What does it mean for investors
+            <option value="NO ACT">NO ACT</option>
+            <option value="SC 13G/A">SC 13G/A</option>
+            <option value="S-8">S-8</option>
+            <option value="8-K">8-K</option>
+            <option value="CERT">CERT</option>
+            <option value="CERTNYS">CERTNYS</option>
+            <option value="FWP">FWP</option>
+            <option value="25-NSE">25-NSE</option>
+            <option value="424B2">424B2</option>
+            <option value="CORRESP">CORRESP</option>
+            <option value="DEFA14A">DEFA14A</option>
+            <option value="S-8 POS">S-8 POS</option>
+            <option value="DEF 14A">DEF 14A</option>
+            <option value="IRANNOTICE">IRANNOTICE</option>
+            <option value="144">144</option>
+            <option value="PX14A6G">PX14A6G</option>
+            <option value="10-K">10-K</option>
+            <option value="PRE 14A">PRE 14A</option>
+            <option value="8-K/A">8-K/A</option>
+            <option value="PX14A6N">PX14A6N</option>
+            <option value="10-Q">10-Q</option>
+            <option value="UPLOAD">UPLOAD</option>
+            <option value="8-A12B">8-A12B</option>
+            <option value="DFAN14A">DFAN14A</option>
+            <option value="SD">SD</option>
+            <option value="SC 13G">SC 13G</option>
+            <option value="25">25</option>
+            <option value="S-3ASR">S-3ASR</option>
+          </select>
+        </div>
+        <div style="margin-top: 10px">
+          <button type="submit" style="border-radius: 20px">
+            Get Recent Filings
           </button>
         </div>
-        <div id="summary-container" style="display: none"></div>
-        <iframe id="documentIFrame" src="" style="display: none"></iframe>
+      </form>
+    </div>
+  </div>
+  <div class="container">
+    <div class="left-panel">
+      <div id="filingsTable"></div>
+      <div id="pagination"></div>
+      <p id="loadingText" class="hidden">Loading...</p>
+    </div>
+    <div class="right-panel" style="padding-left: 10px">
+      <div id="buttons" style="display: none">
+        <button type="button" class="display-summary info-buttons">
+          Summarize
+        </button>
+        <button class="key-points info-buttons">Key Points</button>
+        <button class="red-flags info-buttons">Regulation Checker</button>
+        <button class="who-is-involved info-buttons">Who is involved</button>
+        <button class="who-is-impacted info-buttons">Who is impacted</button>
+        <button class="what-does-it-mean info-buttons">
+          What does it mean for investors
+        </button>
+      </div>
+      <div id="summary-container" style="display: none"></div>
+      <iframe id="documentIFrame" src="" style="display: none; overflow-x: scroll;"></iframe>
+    </div>
+  </div>
+  <div>
+    <div id="modal" class="jw-modal">
+      <div class="jw-modal-body">
+        <div id="modal-body"></div>
+        <button onclick="closeModal()">Close</button>
       </div>
     </div>
-    <div>
-      <div id="modal" class="jw-modal">
-        <div class="jw-modal-body">
-          <div id="modal-body"></div>
-          <button onclick="closeModal()">Close</button>
-        </div>
-      </div>
-    </div>
+  </div>
 
-    <script>
-      function openModal() {
-        document.getElementById("modal").classList.add("open");
-        document.body.classList.add("jw-modal-open");
-      }
+  <script>
+    function openModal() {
+      document.getElementById("modal").classList.add("open");
+      document.body.classList.add("jw-modal-open");
+    }
 
-      function closeModal() {
-        document.querySelector(".jw-modal.open").classList.remove("open");
-        document.body.classList.remove("jw-modal-open");
-        document.getElementById("modal-body").innerHTML = "";
-      }
+    function closeModal() {
+      document.querySelector(".jw-modal.open").classList.remove("open");
+      document.body.classList.remove("jw-modal-open");
+      document.getElementById("modal-body").innerHTML = "";
+    }
 
-      window.addEventListener("load", function () {
-        document.addEventListener("click", (event) => {
-          if (event.target.classList.contains("jw-modal")) {
-            closeModal();
-          }
-        });
+    window.addEventListener("load", function () {
+      document.addEventListener("click", (event) => {
+        if (event.target.classList.contains("jw-modal")) {
+          closeModal();
+        }
       });
+    });
 
-      function openDocumentIFrame(url) {
-        const iframe = document.querySelector("#documentIFrame");
-        const buttons = document.querySelector("#buttons");
-        const summaryDiv = document.querySelector("#summary-container");
-        iframe.src = `/get_filing_html?url=${encodeURI(url)}`;
-        iframe.style.display = "block";
-        summaryDiv.style.display = "none";
-        buttons.style.display = "block";
-      }
+    function openDocumentIFrame(url) {
+      const iframe = document.querySelector("#documentIFrame");
+      const buttons = document.querySelector("#buttons");
+      const summaryDiv = document.querySelector("#summary-container");
+      iframe.src = `/get_filing_html?url=${encodeURI(url)}`;
+      iframe.style.display = "block";
+      summaryDiv.style.display = "none";
+      buttons.style.display = "block";
+    }
 
-      function selectRow(rowElement) {
-        const rows = document.querySelectorAll("#filingsTable tr");
-        rows.forEach((row) => {
-          row.classList.remove("selected"); // Remove 'selected' from all rows
-        });
-        rowElement.classList.add("selected"); // Add 'selected' to the clicked row
-      }
-      document
-        .getElementById("tickerForm")
-        .addEventListener("submit", function (event) {
-          event.preventDefault();
-          const ticker = document.getElementById("ticker").value;
-          const loadingText = document.getElementById("loadingText");
-          const filingType = document.getElementById("filingType").value;
-          loadingText.classList.remove("hidden");
-          fetch(`/recent_filings?company=${ticker}&filing_type=${filingType}`)
-            .then((response) => response.json())
-            .then((data) => {
-              if (data.error) {
-                alert(data.error);
-                return;
-              }
-              const filings = data.filings;
-              const filingsPerPage = 15;
-              const numPages = Math.ceil(filings.length / filingsPerPage);
-              const currentPage = 1;
-              updatePage(currentPage, numPages, filings, filingsPerPage);
-            })
-            .catch((error) => console.error("Error:", error))
-            .finally((_) => {
-              loadingText.classList.add("hidden");
-            });
-        });
-
-      function getResponseForPage(buttonSelector, path, prefix) {
-        // Extract the document url from the iframe.src
-        const iframe = document.querySelector("#documentIFrame");
-        const url = new URL(iframe.src);
-        const extractedUrl = url.searchParams.get("url");
-
-        const button = document.querySelector(buttonSelector);
-        const originalText = button.innerHTML;
-        button.innerHTML = "Loading...";
-
-        // Fetch the summary for the selected page
-        fetch(`/${path}?url=${encodeURI(extractedUrl)}`)
+    function selectRow(rowElement) {
+      const rows = document.querySelectorAll("#filingsTable tr");
+      rows.forEach((row) => {
+        row.classList.remove("selected"); // Remove 'selected' from all rows
+      });
+      rowElement.classList.add("selected"); // Add 'selected' to the clicked row
+    }
+    document
+      .getElementById("tickerForm")
+      .addEventListener("submit", function (event) {
+        event.preventDefault();
+        const ticker = document.getElementById("ticker").value;
+        const loadingText = document.getElementById("loadingText");
+        const filingType = document.getElementById("filingType").value;
+        loadingText.classList.remove("hidden");
+        fetch(`/recent_filings?company=${ticker}&filing_type=${filingType}`)
           .then((response) => response.json())
           .then((data) => {
             if (data.error) {
               alert(data.error);
               return;
             }
-
-            console.log(data);
-            const summaryDiv = document.getElementById("modal-body");
-            summaryDiv.innerHTML = prefix + "\n" + data;
-            openModal();
+            const filings = data.filings;
+            const filingsPerPage = 15;
+            const numPages = Math.ceil(filings.length / filingsPerPage);
+            const currentPage = 1;
+            updatePage(currentPage, numPages, filings, filingsPerPage);
           })
           .catch((error) => console.error("Error:", error))
           .finally((_) => {
             loadingText.classList.add("hidden");
-            button.innerHTML = originalText;
           });
-      }
-      document
-        .querySelector(".display-summary")
-        .addEventListener("click", function (event) {
-          event.preventDefault();
-          getResponseForPage(".display-summary", "get_summary", "Summary:");
+      });
+
+    function getResponseForPage(buttonSelector, path, prefix) {
+      // Extract the document url from the iframe.src
+      const iframe = document.querySelector("#documentIFrame");
+      const url = new URL(iframe.src);
+      const extractedUrl = url.searchParams.get("url");
+
+      const button = document.querySelector(buttonSelector);
+      const originalText = button.innerHTML;
+      button.innerHTML = "Loading...";
+
+      // Fetch the summary for the selected page
+      fetch(`/${path}?url=${encodeURI(extractedUrl)}`)
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.error) {
+            alert(data.error);
+            return;
+          }
+        const separatedData = data.replace('\n\n','\n').split('\n')
+        const filteredArray = separatedData.filter(item => item !== "");
+        const numberedPoints = filteredArray.map((point) => `<div>${point}</div><br>`).join('');
+        const summaryDiv = document.getElementById("modal-body");
+        summaryDiv.innerHTML = `<div>${numberedPoints}</div>`;
+        openModal();
+        })
+        .catch((error) => console.error("Error:", error))
+        .finally((_) => {
+          loadingText.classList.add("hidden");
+          button.innerHTML = originalText;
         });
+    }
+    document
+      .querySelector(".display-summary")
+      .addEventListener("click", function (event) {
+        event.preventDefault();
+        getResponseForPage(".display-summary", "get_summary", "Summary:");
+      });
 
-      document
-        .querySelector(".key-points")
-        .addEventListener("click", function (event) {
-          event.preventDefault();
-          getResponseForPage(".key-points", "get_key_points", "Key Points:");
-        });
+    document
+      .querySelector(".key-points")
+      .addEventListener("click", function (event) {
+        event.preventDefault();
+        getResponseForPage(".key-points", "get_key_points", "Key Points:");
+      });
 
-      document
-        .querySelector(".red-flags")
-        .addEventListener("click", function (event) {
-          event.preventDefault();
-          getResponseForPage(".red-flags", "get_red_flags", "Red Flags:");
-        });
+    document
+      .querySelector(".red-flags")
+      .addEventListener("click", function (event) {
+        event.preventDefault();
+        getResponseForPage(".red-flags", "get_red_flags", "Red Flags:");
+      });
 
-      document
-        .querySelector(".who-is-involved")
-        .addEventListener("click", function (event) {
-          event.preventDefault();
-          getResponseForPage(
-            ".who-is-involved",
-            "get_who_is_involved",
-            "Who is involved:"
-          );
-        });
+    document
+      .querySelector(".who-is-involved")
+      .addEventListener("click", function (event) {
+        event.preventDefault();
+        getResponseForPage(
+          ".who-is-involved",
+          "get_who_is_involved",
+          "Who is involved:"
+        );
+      });
 
-      document
-        .querySelector(".who-is-impacted")
-        .addEventListener("click", function (event) {
-          event.preventDefault();
-          getResponseForPage(
-            ".who-is-impacted",
-            "get_who_is_impacted",
-            "Who is impacted:"
-          );
-        });
+    document
+      .querySelector(".who-is-impacted")
+      .addEventListener("click", function (event) {
+        event.preventDefault();
+        getResponseForPage(
+          ".who-is-impacted",
+          "get_who_is_impacted",
+          "Who is impacted:"
+        );
+      });
 
-      document
-        .querySelector(".what-does-it-mean")
-        .addEventListener("click", function (event) {
-          event.preventDefault();
-          getResponseForPage(
-            ".what-does-it-mean",
-            "get_what_does_it_mean",
-            "What does it mean for investors:"
-          );
-        });
+    document
+      .querySelector(".what-does-it-mean")
+      .addEventListener("click", function (event) {
+        event.preventDefault();
+        getResponseForPage(
+          ".what-does-it-mean",
+          "get_what_does_it_mean",
+          "What does it mean for investors:"
+        );
+      });
 
-      function updatePage(pageNum, numPages, filings, filingsPerPage) {
-        const startIndex = (pageNum - 1) * filingsPerPage;
-        const endIndex = Math.min(startIndex + filingsPerPage, filings.length);
-        const filingsToShow = filings.slice(startIndex, endIndex);
+    function updatePage(pageNum, numPages, filings, filingsPerPage) {
+      const startIndex = (pageNum - 1) * filingsPerPage;
+      const endIndex = Math.min(startIndex + filingsPerPage, filings.length);
+      const filingsToShow = filings.slice(startIndex, endIndex);
 
-        console.log(filingsToShow);
+      console.log(filingsToShow);
 
-        const tableContent = `
+      const tableContent = `
                   <table>
                       <tr>
                           <th>Filing Type</th>
                           <th>Filing Date</th>
                       </tr>
                       ${filingsToShow
-                        .map(
-                          (filing) => `
+          .map(
+            (filing) => `
                           <tr class="shadow1" onclick="selectRow(this); openDocumentIFrame('${filing.url}')">
                               <td>${filing.form_type}</td>
                               <td>${filing.filing_date}</td>
                           </tr>
                       `
-                        )
-                        .join("")}
+          )
+          .join("")}
                   </table>`;
 
-        if (filingsToShow.length > 0) {
-          openDocumentIFrame(filingsToShow[0].url);
-        }
-
-        const prevPageButton = document.createElement("button");
-        prevPageButton.innerText = "prev";
-        const nextPageButton = document.createElement("button");
-        nextPageButton.innerText = "next";
-
-        const pageNumText = document.createElement("p");
-        pageNumText.classList.add("pagination-text");
-        pageNumText.innerText = `page ${pageNum} / ${numPages}`;
-
-        prevPageButton.onclick = () => {
-          updatePage(pageNum - 1, numPages, filings, filingsPerPage);
-        };
-        nextPageButton.onclick = () => {
-          updatePage(pageNum + 1, numPages, filings, filingsPerPage);
-        };
-
-        document.getElementById("filingsTable").innerHTML = tableContent;
-        const paginationContainer = document.getElementById("pagination");
-        paginationContainer.innerHTML = "";
-        if (pageNum > 1) {
-          paginationContainer.appendChild(prevPageButton);
-        }
-        if (pageNum !== numPages) {
-          paginationContainer.appendChild(nextPageButton);
-        }
-        paginationContainer.appendChild(pageNumText);
+      if (filingsToShow.length > 0) {
+        openDocumentIFrame(filingsToShow[0].url);
       }
-    </script>
-  </body>
+
+      const prevPageButton = document.createElement("button");
+      prevPageButton.innerText = "prev";
+      const nextPageButton = document.createElement("button");
+      nextPageButton.innerText = "next";
+
+      const pageNumText = document.createElement("p");
+      pageNumText.classList.add("pagination-text");
+      pageNumText.innerText = `page ${pageNum} / ${numPages}`;
+
+      prevPageButton.onclick = () => {
+        updatePage(pageNum - 1, numPages, filings, filingsPerPage);
+      };
+      nextPageButton.onclick = () => {
+        updatePage(pageNum + 1, numPages, filings, filingsPerPage);
+      };
+
+      document.getElementById("filingsTable").innerHTML = tableContent;
+      const paginationContainer = document.getElementById("pagination");
+      paginationContainer.innerHTML = "";
+      if (pageNum > 1) {
+        paginationContainer.appendChild(prevPageButton);
+      }
+      if (pageNum !== numPages) {
+        paginationContainer.appendChild(nextPageButton);
+      }
+      paginationContainer.appendChild(pageNumText);
+    }
+  </script>
+</body>
+
 </html>
